@@ -40,8 +40,7 @@ public class StateMachineConfiguration extends StateMachineConfigurerAdapter<Pay
     public void configure(StateMachineConfigurationConfigurer<PaymentState, PaymentEvent> config) throws Exception {
         StateMachineListenerAdapter<PaymentState,PaymentEvent> adapter = new StateMachineListenerAdapter<>(){
             @Override
-            public void stateChanged(State<PaymentState, PaymentEvent> from, State<PaymentState, PaymentEvent> to) {
-                log.info(String.format("State changed from %s to %s",from,to));
+            public void stateChanged(State<PaymentState, PaymentEvent> from, State<PaymentState, PaymentEvent> to) {log.info("State changed from {} to {}",from,to);
             }
         };
         config.withConfiguration()
