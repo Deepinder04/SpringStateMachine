@@ -1,10 +1,13 @@
 package com.practice.SpringStateMachine.Services;
 
 import com.practice.SpringStateMachine.Repository.PaymentRepository;
+import com.practice.SpringStateMachine.Utils.Constants;
 import com.practice.SpringStateMachine.domain.Payment;
 import com.practice.SpringStateMachine.domain.PaymentEvent;
 import com.practice.SpringStateMachine.domain.PaymentState;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
@@ -26,18 +29,21 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public StateMachine<PaymentState, PaymentEvent> preAuth(Long paymentId) {
         StateMachine<PaymentState,PaymentEvent> sm = build(paymentId);
+        sendEvent(paymentId,sm,PaymentEvent.PRE_AUTHORIZE);
         return null;
     }
 
     @Override
     public StateMachine<PaymentState, PaymentEvent> authorizePayment(Long paymentId) {
         StateMachine<PaymentState,PaymentEvent> sm = build(paymentId);
+        sendEvent(paymentId,sm,PaymentEvent.AUTHORIZE);
         return null;
     }
 
     @Override
     public StateMachine<PaymentState, PaymentEvent> declineAuth(Long paymentId) {
         StateMachine<PaymentState,PaymentEvent> sm = build(paymentId);
+        sendEvent(paymentId,sm,PaymentEvent.AUTH_DECLINED);
         return null;
     }
 
@@ -51,5 +57,12 @@ public class PaymentServiceImpl implements PaymentService {
                 .doWithAllRegions(sma -> sma.resetStateMachine(new DefaultStateMachineContext<>(payment.getState(),null,null,null)));
         sm.start();
         return sm;
+    }
+
+    private void sendEvent(Long paymentId, StateMachine<PaymentState,PaymentEvent> sm, PaymentEvent event){
+        Message<PaymentEvent> message = MessageBuilder.withPayload(event)
+                .setHeader(Constants.PAYMENT_ID_HEADER,paymentId)
+                .build();
+        sm.sendEvent(message);
     }
 }
